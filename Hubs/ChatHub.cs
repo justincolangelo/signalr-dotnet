@@ -20,7 +20,7 @@ namespace SignalRChat.Hubs
             await Clients.All.SendAsync(RECEIVEMESSAGE, "admin", $"{connection.Username} joined.");
         }
 
-        public async Task JoinChatRoom(UserConnection connection)
+        public async Task JoinChatRoom(UserConnection connection/*, string username, string chatroom*/)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, connection.ChatRoom);
 
@@ -29,11 +29,16 @@ namespace SignalRChat.Hubs
             await Clients.Group(connection.ChatRoom).SendAsync(RECEIVEROOMMESSAGE, "admin", $"{connection.Username} joined {connection.ChatRoom}.");
         }
 
-        public async Task SendMessage(string message)
+        public async Task SendMessage(string username, string message)
         {
             if (_sharedDb.connections.TryGetValue(Context.ConnectionId, out UserConnection connection)) {
-                await Clients.Group(connection.ChatRoom).SendAsync(RECEIVEROOMMESSAGE, connection.Username, message);
+                await Clients.Group(connection.ChatRoom).SendAsync(RECEIVEROOMMESSAGE, connection.Username ?? username, message);
             }
+        }
+
+        public async Task UserTyping(string user)
+        {
+            await Clients.Others.SendAsync("UserTyping", user);
         }
 
     }
